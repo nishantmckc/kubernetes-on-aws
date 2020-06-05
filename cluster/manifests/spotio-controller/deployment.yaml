@@ -1,0 +1,77 @@
+{{ if and (ne .Cluster.ConfigItems.spotio_account_id "") (ne .Cluster.ConfigItems.spotio_access_token "") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  labels:
+    application: spotinst-kubernetes-cluster-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      application: spotinst-kubernetes-cluster-controller
+  template:
+    metadata:
+      labels:
+        application: spotinst-kubernetes-cluster-controller
+      annotations:
+        config/hash: {{"secret.yaml" | manifestHash}}
+    spec:
+      # TODO: run on master?
+      # nodeSelector:
+      #   node.kubernetes.io/role: master
+      containers:
+      - name: controller
+        image: spotinst/kubernetes-cluster-controller:1.0.59 # TODO: setup pipeline
+        env:
+        - name: SPOTINST_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: spotinst.token
+              name: spotinst-kubernetes-cluster-controller
+        - name: SPOTINST_ACCOUNT
+          value: "{{ .Cluster.ConfigItems.spotio_account_id }}"
+        - name: CLUSTER_IDENTIFIER
+          value: "{{ .Cluster.LocalID }}"
+        - name: DISABLE_AUTO_UPDATE
+          value: "true"
+        - name: POD_ID
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.uid
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthcheck
+            port: 4401
+            scheme: HTTP
+          initialDelaySeconds: 300
+          periodSeconds: 20
+          successThreshold: 1
+          timeoutSeconds: 2
+        resources:
+          limits:
+            cpu: "{{ .ConfigItems.spotio_ocean_controller_cpu }}"
+            memory: "{{ .ConfigItems.spotio_ocean_controller_memory }}"
+          requests:
+            cpu: "{{ .ConfigItems.spotio_ocean_controller_cpu }}"
+            memory: "{{ .ConfigItems.spotio_ocean_controller_memory }}"
+      priorityClassName: system-cluster-critical
+      serviceAccountName: spotinst-kubernetes-cluster-controller
+      tolerations:
+      - key: node.kubernetes.io/role
+        value: master
+        effect: NoSchedule
+{{ end }}

@@ -348,3 +348,14 @@ ebs_root_volume_size: "50"
 
 # maximum number of bytes streamed per second, e.g. for port-forward.
 max_streaming_bytes_per_second: 1000000000 # 1 GB/s
+
+# spot.io Ocean configuration.
+#
+# This configuration is cluster wide and applies to all spot.io "node pools".
+spotio_ocean_spot_percentage: "100"
+spotio_ocean_fallback_to_ondemand: "true"
+spotio_ocean_utilize_reserved_instances: "false"
+
+# configuration for spot.io controller
+spotio_ocean_controller_cpu: "50m"
+spotio_ocean_controller_memory: "512Mi"

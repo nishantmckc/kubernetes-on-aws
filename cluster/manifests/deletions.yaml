@@ -116,3 +116,24 @@ post_apply:
   kind: PersistentVolumeClaim
   namespace: kube-system
 {{ end }}
+# cleanup spotinst controller when not configured
+{{ if and (eq .Cluster.ConfigItems.spotio_account_id "") (eq .Cluster.ConfigItems.spotio_access_token "") }}
+- name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  kind: Deployment
+- name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  kind: Secret
+- name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  kind: VirticalPodAutoscaler
+- name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  kind: ServiceAccount
+- name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  kind: ClusterRole
+- name: spotinst-kubernetes-cluster-controller
+  namespace: kube-system
+  kind: ClusterRoleBinding
+{{ end }}

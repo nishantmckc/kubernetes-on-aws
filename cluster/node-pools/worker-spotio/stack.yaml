@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Kubernetes spot.io worker node pool
+
+Mappings:
+  Images:
+    eu-central-1:
+      MachineImage: "{{ .Cluster.ConfigItems.kuberuntu_image_v1_17 }}"
+
+Resources:
+  SpotinstOceanLaunchSpec:
+    Type: Custom::oceanLaunchSpec
+    Properties:
+      ServiceToken: !Sub "arn:aws:lambda:${AWS::Region}:178579023202:function:spotinst-cloudformation"
+      accessToken: "{{ .Cluster.ConfigItems.spotio_access_token }}"
+      accountId: "{{ .Cluster.ConfigItems.spotio_account_id }}"
+      oceanLaunchSpec:
+        oceanId: !ImportValue "{{ .Cluster.ID }}:spotio-ocean-id"
+        imageId: !FindInMap
+        - Images
+        - !Ref "AWS::Region"
+        - MachineImage
+        userData: "{{ .UserData }}"
+        labels:
+        - key: "spot.io"
+          value: "true"
+{{- if index .NodePool.ConfigItems "labels"}}
+  {{- range split .NodePool.ConfigItems.labels ","}}
+    {{- $label := split . "="}}
+        - key: {{index $label 0}}
+          value: {{index $label 1}}
+  {{- end}}
+{{end}}
+        taints:
+        - key: "spot.io"
+          value: "true"
+          effect: "NoSchedule"
+# {{- if index .NodePool.ConfigItems "taints"}}
+#   {{- range split .NodePool.ConfigItems.taints ","}}
+#     {{- $taint := split . "="}}
+#         # TODO: split value
+#         - key: {{index $taint 0}}
+#           value: {{index $taint 1}}
+#   {{- end}}
+# {{end}}
+        tags:
+          - tagKey: kubernetes.io/cluster/{{ .Cluster.ID }}
+            tagValue: owned
+          - tagKey: Name
+            tagValue: "{{ .NodePool.Name }} ({{ .Cluster.ID }})"
+            # TODO: evaluate how much of this we need?
+          - tagKey: node.kubernetes.io/role
+            tagValue: worker
+          - tagKey: node.kubernetes.io/node-pool
+            tagValue: {{ .NodePool.Name }}
+          - tagKey: kubernetes.io/node-pool/profile
+            tagValue: {{ .NodePool.Profile }}
+          - tagKey: kubernetes.io/role/node-pool
+            tagValue: "true"
+
+          # TODO: do we want to run skipper on spot.io nodes?
+          # only node pools without taints should be attached to Ingress Load balancer
+# {{- if or (not (index .NodePool.ConfigItems "taints")) (eq (index .NodePool.ConfigItems "taints") "dedicated=skipper-ingress:NoSchedule") }}
+#           - tagKey: zalando.org/ingress-enabled
+#             tagValue: "true"
+# {{- end }}
+          - tagKey: spot.io/type
+            tagValue: launchSpec
+        autoScale:
+          # disable headroom/preprovisioned instances
+          headrooms: []
