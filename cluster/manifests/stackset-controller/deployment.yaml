@@ -5,7 +5,7 @@ metadata:
   namespace: kube-system
   labels:
     application: stackset-controller
-    version: "v1.1.23"
+    version: "v1.1.30"
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
     metadata:
       labels:
         application: stackset-controller
-        version: "v1.1.23"
+        version: "v1.1.30"
     spec:
       priorityClassName: system-cluster-critical
       serviceAccountName: stackset-controller
