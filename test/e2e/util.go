@@ -3,6 +3,7 @@ package e2e
 import (
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -21,6 +22,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	rgclient "github.com/szuecs/routegroup-client"
+	rgv1 "github.com/szuecs/routegroup-client/apis/zalando.org/v1"
 	zv1 "github.com/zalando-incubator/kube-aws-iam-controller/pkg/apis/zalando.org/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -31,6 +34,64 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
+
+var (
+	errTimeout = errors.New("Timeout")
+)
+
+func waitForRouteGroup(cs rgclient.ZalandoInterface, name, ns string, d time.Duration) (string, error) {
+	var (
+		addr string
+		err  error
+	)
+	limit := time.Now().Add(d)
+	for time.Now().Before(limit) {
+		rg, err := cs.ZalandoV1().RouteGroups(ns).Get(name, metav1.GetOptions{ResourceVersion: "0"})
+		if err != nil {
+			return "", err
+		}
+
+		if len(rg.Status.LoadBalancer.RouteGroup) > 0 {
+			addr = rg.Status.LoadBalancer.RouteGroup[0].Hostname
+			break
+		}
+		time.Sleep(10 * time.Second)
+	}
+	if addr == "" {
+		err = errTimeout
+	}
+	//cs.
+	return addr, err
+}
+
+func createRouteGroup(name, hostname, namespace string, labels, annotations map[string]string, port int, routes ...rgv1.RouteGroupRouteSpec) *rgv1.RouteGroup {
+	return &rgv1.RouteGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name + string(uuid.NewUUID()),
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: rgv1.RouteGroupSpec{
+			Hosts: []string{hostname},
+			Backends: []rgv1.RouteGroupBackend{
+				{
+					Name:        name,
+					Type:        "service",
+					ServiceName: name,
+					ServicePort: port,
+				},
+			},
+			DefaultBackends: []rgv1.RouteGroupBackendReference{
+				{
+					BackendName: name,
+					Weight:      1,
+				},
+			},
+			Routes: routes,
+		},
+	}
+}
 
 func createIngress(name, hostname, namespace string, labels, annotations map[string]string, port int) *v1beta1.Ingress {
 	return &v1beta1.Ingress{
