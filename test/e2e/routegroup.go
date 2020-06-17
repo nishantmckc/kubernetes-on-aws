@@ -60,12 +60,12 @@ var _ = framework.KubeDescribe("RouteGroup ALB creation", func() {
 		// SVC
 		By("Creating service " + serviceName + " in namespace " + ns)
 		service := createServiceTypeClusterIP(serviceName, labels, port, targetPort)
-		defer func() {
-			By("deleting the service")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the service")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		_, err := cs.CoreV1().Services(ns).Create(service)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -73,12 +73,12 @@ var _ = framework.KubeDescribe("RouteGroup ALB creation", func() {
 		By("Creating a POD with prefix " + nameprefix + " in namespace " + ns)
 		expectedResponse := "OK RG1"
 		pod := createSkipperPod(nameprefix, ns, fmt.Sprintf(`r0: * -> inlineContent("%s") -> <shunt>`, expectedResponse), labels, targetPort)
-		defer func() {
-			By("deleting the pod")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the pod")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 
 		_, err = cs.CoreV1().Pods(ns).Create(pod)
 		Expect(err).NotTo(HaveOccurred())
@@ -89,12 +89,12 @@ var _ = framework.KubeDescribe("RouteGroup ALB creation", func() {
 		rg := createRouteGroup(serviceName, hostName, ns, labels, nil, port, rgv1.RouteGroupRouteSpec{
 			PathSubtree: "/",
 		})
-		defer func() {
-			By("deleting the routegroup")
-			defer GinkgoRecover()
-			err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the routegroup")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		rgCreate, err := cs.ZalandoV1().RouteGroups(ns).Create(rg, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 		addr, err := waitForRouteGroup(cs, rgCreate.Name, rgCreate.Namespace, 10*time.Minute)
@@ -141,12 +141,12 @@ var _ = framework.KubeDescribe("RouteGroup ALB creation", func() {
 		// SVC
 		By("Creating service " + serviceName + " in namespace " + ns)
 		service := createServiceTypeClusterIP(serviceName, labels, port, targetPort)
-		defer func() {
-			By("deleting the service")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the service")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		_, err := cs.CoreV1().Services(ns).Create(service)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -161,12 +161,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 				expectedResponse),
 			labels,
 			targetPort)
-		defer func() {
-			By("deleting the pod")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the pod")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 
 		_, err = cs.CoreV1().Pods(ns).Create(pod)
 		Expect(err).NotTo(HaveOccurred())
@@ -181,12 +181,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 			Methods:     []string{"GET"},
 			Predicates:  []string{`Header("Foo", "bar")`},
 		})
-		defer func() {
-			By("deleting the routegroup")
-			defer GinkgoRecover()
-			err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the routegroup")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		rgCreate, err := cs.ZalandoV1().RouteGroups(ns).Create(rg, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 		_, err = waitForRouteGroup(cs, rgCreate.Name, rgCreate.Namespace, 10*time.Minute)
@@ -238,12 +238,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 		// SVC
 		By("Creating service " + serviceName + " in namespace " + ns)
 		service := createServiceTypeClusterIP(serviceName, labels, port, targetPort)
-		defer func() {
-			By("deleting the service")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the service")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		_, err := cs.CoreV1().Services(ns).Create(service)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -258,12 +258,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 				expectedResponse),
 			labels,
 			targetPort)
-		defer func() {
-			By("deleting the pod")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the pod")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 
 		_, err = cs.CoreV1().Pods(ns).Create(pod)
 		Expect(err).NotTo(HaveOccurred())
@@ -301,12 +301,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 				},
 			},
 		})
-		defer func() {
-			By("deleting the routegroup")
-			defer GinkgoRecover()
-			err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the routegroup")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		rgCreate, err := cs.ZalandoV1().RouteGroups(ns).Create(rg, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 		_, err = waitForRouteGroup(cs, rgCreate.Name, rgCreate.Namespace, 10*time.Minute)
@@ -382,12 +382,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 		// SVC
 		By("Creating service " + serviceName + " in namespace " + ns)
 		service := createServiceTypeClusterIP(serviceName, labels, port, targetPort)
-		defer func() {
-			By("deleting the service")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the service")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		_, err := cs.CoreV1().Services(ns).Create(service)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -402,12 +402,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 				expectedResponse),
 			labels,
 			targetPort)
-		defer func() {
-			By("deleting the pod")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the pod")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 
 		_, err = cs.CoreV1().Pods(ns).Create(pod)
 		Expect(err).NotTo(HaveOccurred())
@@ -440,12 +440,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 				},
 			},
 		})
-		defer func() {
-			By("deleting the routegroup")
-			defer GinkgoRecover()
-			err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the routegroup")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		rgCreate, err := cs.ZalandoV1().RouteGroups(ns).Create(rg, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 		_, err = waitForRouteGroup(cs, rgCreate.Name, rgCreate.Namespace, 10*time.Minute)
@@ -506,12 +506,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 		// SVC
 		By("Creating service " + serviceName + " in namespace " + ns)
 		service := createServiceTypeClusterIP(serviceName, labels, port, targetPort)
-		defer func() {
-			By("deleting the service")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the service")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		_, err := cs.CoreV1().Services(ns).Create(service)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -523,12 +523,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 			`rHealth: Path("/") -> inlineContent("OK") -> <shunt>`,
 			labels,
 			targetPort)
-		defer func() {
-			By("deleting the pod")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the pod")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 
 		_, err = cs.CoreV1().Pods(ns).Create(pod)
 		Expect(err).NotTo(HaveOccurred())
@@ -539,12 +539,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 		rg := createRouteGroup(serviceName, hostName, ns, labels, annotations, port, rgv1.RouteGroupRouteSpec{
 			PathSubtree: "/",
 		})
-		defer func() {
-			By("deleting the routegroup")
-			defer GinkgoRecover()
-			err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the routegroup")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		rgCreate, err := cs.ZalandoV1().RouteGroups(ns).Create(rg, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 		_, err = waitForRouteGroup(cs, rgCreate.Name, rgCreate.Namespace, 10*time.Minute)
@@ -581,12 +581,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 		// SVC
 		By("Creating service " + serviceName + " in namespace " + ns)
 		service := createServiceTypeClusterIP(serviceName, labels, port, targetPort)
-		defer func() {
-			By("deleting the service")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the service")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		_, err := cs.CoreV1().Services(ns).Create(service)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -598,12 +598,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 			`rHealth: Path("/") -> inlineContent("OK") -> <shunt>`,
 			labels,
 			targetPort)
-		defer func() {
-			By("deleting the pod")
-			defer GinkgoRecover()
-			err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the pod")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 
 		_, err = cs.CoreV1().Pods(ns).Create(pod)
 		Expect(err).NotTo(HaveOccurred())
@@ -615,12 +615,12 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 			PathSubtree: "/",
 		})
 		rg.Spec.Hosts = append(rg.Spec.Hosts, hostName2) // add second hostname
-		defer func() {
-			By("deleting the routegroup")
-			defer GinkgoRecover()
-			err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
-			Expect(err2).NotTo(HaveOccurred())
-		}()
+		// defer func() {
+		// 	By("deleting the routegroup")
+		// 	defer GinkgoRecover()
+		// 	err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
+		// 	Expect(err2).NotTo(HaveOccurred())
+		// }()
 		rgCreate, err := cs.ZalandoV1().RouteGroups(ns).Create(rg, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 		_, err = waitForRouteGroup(cs, rgCreate.Name, rgCreate.Namespace, 10*time.Minute)
