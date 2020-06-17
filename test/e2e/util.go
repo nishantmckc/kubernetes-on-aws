@@ -81,6 +81,10 @@ func createRouteGroup(name, hostname, namespace string, labels, annotations map[
 					ServiceName: name,
 					ServicePort: port,
 				},
+				{
+					Name: "router",
+					Type: "shunt",
+				},
 			},
 			DefaultBackends: []rgv1.RouteGroupBackendReference{
 				{
