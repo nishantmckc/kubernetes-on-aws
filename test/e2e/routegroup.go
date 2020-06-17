@@ -566,4 +566,88 @@ rBackend: Path("/backend") -> inlineContent("%s") -> <shunt>;`,
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(b)).To(Equal("OK"))
 	})
+
+	It("Should create ALB routegroup with 2 hostnames [RouteGroup] [Zalando]", func() {
+		serviceName := "rg-test-2hosts"
+		nameprefix := serviceName + "-"
+		ns := f.Namespace.Name
+		hostName := fmt.Sprintf("%s-%d.%s", serviceName, time.Now().UTC().Unix(), E2EHostedZone())
+		hostName2 := fmt.Sprintf("%s-2-%d.%s", serviceName, time.Now().UTC().Unix(), E2EHostedZone())
+		labels := map[string]string{
+			"app": serviceName,
+		}
+		port := 83
+		targetPort := 80
+		// SVC
+		By("Creating service " + serviceName + " in namespace " + ns)
+		service := createServiceTypeClusterIP(serviceName, labels, port, targetPort)
+		defer func() {
+			By("deleting the service")
+			defer GinkgoRecover()
+			err2 := cs.CoreV1().Services(ns).Delete(service.Name, metav1.NewDeleteOptions(0))
+			Expect(err2).NotTo(HaveOccurred())
+		}()
+		_, err := cs.CoreV1().Services(ns).Create(service)
+		Expect(err).NotTo(HaveOccurred())
+
+		// POD
+		By("Creating a POD with prefix " + nameprefix + " in namespace " + ns)
+		pod := createSkipperPod(
+			nameprefix,
+			ns,
+			`rHealth: Path("/") -> inlineContent("OK") -> <shunt>`,
+			labels,
+			targetPort)
+		defer func() {
+			By("deleting the pod")
+			defer GinkgoRecover()
+			err2 := cs.CoreV1().Pods(ns).Delete(pod.Name, metav1.NewDeleteOptions(0))
+			Expect(err2).NotTo(HaveOccurred())
+		}()
+
+		_, err = cs.CoreV1().Pods(ns).Create(pod)
+		Expect(err).NotTo(HaveOccurred())
+		framework.ExpectNoError(f.WaitForPodRunning(pod.Name))
+
+		// RouteGroup
+		By("Creating a routegroup with name " + serviceName + " in namespace " + ns + " with hostname " + hostName)
+		rg := createRouteGroup(serviceName, hostName, ns, labels, nil, port, rgv1.RouteGroupRouteSpec{
+			PathSubtree: "/",
+		})
+		rg.Spec.Hosts = append(rg.Spec.Hosts, hostName2) // add second hostname
+		defer func() {
+			By("deleting the routegroup")
+			defer GinkgoRecover()
+			err2 := cs.ZalandoV1().RouteGroups(ns).Delete(rg.Name, metav1.DeleteOptions{})
+			Expect(err2).NotTo(HaveOccurred())
+		}()
+		rgCreate, err := cs.ZalandoV1().RouteGroups(ns).Create(rg, metav1.CreateOptions{})
+		Expect(err).NotTo(HaveOccurred())
+		_, err = waitForRouteGroup(cs, rgCreate.Name, rgCreate.Namespace, 10*time.Minute)
+		Expect(err).NotTo(HaveOccurred())
+		rgGot, err := cs.ZalandoV1().RouteGroups(ns).Get(rg.Name, metav1.GetOptions{ResourceVersion: "0"})
+		Expect(err).NotTo(HaveOccurred())
+		By(fmt.Sprintf("ALB endpoint from routegroup status: %s", rgGot.Status.LoadBalancer.RouteGroup[0].Hostname))
+
+		// DNS ready
+		By("Waiting for ALB, DNS and skipper route to service and pod works")
+		err = waitForResponse(hostName, "https", 10*time.Minute, isSuccess, false)
+		Expect(err).NotTo(HaveOccurred())
+
+		// response for / is from our backend for hostname
+		By("checking the response for " + hostName + "body we know, if we got the response from our backend")
+		resp, err := http.Get("https://" + hostName)
+		Expect(err).NotTo(HaveOccurred())
+		b, err := ioutil.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(string(b)).To(Equal("OK"))
+		// response for / is from our backend for hostname2
+		By("checking the response for " + hostName2 + "body we know, if we got the response from our backend")
+		resp, err = http.Get("https://" + hostName2)
+		Expect(err).NotTo(HaveOccurred())
+		b, err = ioutil.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(string(b)).To(Equal("OK"))
+	})
+
 })
